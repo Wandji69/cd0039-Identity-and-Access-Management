@@ -7,9 +7,9 @@ from urllib.request import urlopen
 
 app = Flask(__name__)
 
-AUTH0_DOMAIN = @TODO_REPLACE_WITH_YOUR_DOMAIN
+AUTH0_DOMAIN = "@TODO _REPLACE_WITH_YOUR_DOMAIN"
 ALGORITHMS = ['RS256']
-API_AUDIENCE = @TODO_REPLACE_WITH_YOUR_API_AUDIENCE
+API_AUDIENCE = "@TODO _REPLACE_WITH_YOUR_API_AUDIENCE"
 
 
 class AuthError(Exception):
@@ -71,6 +71,7 @@ def verify_decode_jwt(token):
                 'n': key['n'],
                 'e': key['e']
             }
+
     if rsa_key:
         try:
             payload = jwt.decode(
@@ -94,16 +95,31 @@ def verify_decode_jwt(token):
                 'code': 'invalid_claims',
                 'description': 'Incorrect claims. Please, check the audience and issuer.'
             }, 401)
+
         except Exception:
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
             }, 400)
+            
     raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
+def check_permissions(permission, payload):
+    if 'permissions' not in payload:
+                        raise AuthError({
+                            'code': 'invalid_claims',
+                            'description': 'Permissions not included in JWT.'
+                        }, 400)
+
+    if permission not in payload['permissions']:
+        raise AuthError({
+            'code': 'unauthorized',
+            'description': 'Permission not found.'
+        }, 403)
+    return True
 
 def requires_auth(f):
     @wraps(f)
